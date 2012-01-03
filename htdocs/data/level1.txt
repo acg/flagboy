@@ -1,0 +1,6 @@
+C,F C   C   C   V   C   C,G
+X   X   X   C   V   X   X
+X   C,R X   C   V   C   C
+H   H   H   H   S   H   H
+C   C   C   C   V   C   C,F
+C,B C,F C,F C   V   C,F C,F
