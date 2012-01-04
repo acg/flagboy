@@ -29,6 +29,10 @@ body {
   font-size: 20px;
 }
 
+#instructions i {
+  font-style: italic;
+}
+
 #scoreboard {
   top: 84px;
   position: absolute;

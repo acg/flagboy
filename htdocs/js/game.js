@@ -138,9 +138,13 @@ function Game( $elem )
           var instructions = [
             "Bring the girl a flower!",
             "Use an orange flag to cross the road, or die.",
-            "Use arrows to move.",
-            "Press space to pickup items.",
-            "Your backpack can hold up to " + self.BACKPACK_SIZE + " items."
+            "Click on a nearby tile to move there.",
+            "Click on your player to pick up an item.",
+            "Keyboard: arrows move, spacebar picks up an item.",
+            "Your backpack can hold up to " + self.BACKPACK_SIZE + " items.",
+            "",
+            "<i>Graphics: TC</i>",
+            "<i>Programming: Alan</i>"
           ];
 
           $('#instructions')
@@ -159,7 +163,11 @@ function Game( $elem )
 
       var self = this;
 
-      $(window).bind('keydown', function(ev) {
+
+      // Keyboard controls.
+
+      $(window).unbind( 'keydown.game' );
+      $(window).bind( 'keydown.game', function(ev) {
 
         if (self.gameover)
           return false;
@@ -198,23 +206,51 @@ function Game( $elem )
           case KEY_D:
             break;
           default:
-            console.log(key);
-            break;
+            return false; // let event bubble
         }
 
         if (player.x != newx || player.y != newy)
           self.move( newx, newy );
 
-        // Check for gameover, and show something.
-
-        if (self.gameover)
-          self.draw_message( self.won ? 'You won!' : 'You dead. :(' );
-
-        // Update scorebaord.
+        // Update scoreboard and game status.
 
         self.draw_scoreboard();
+        self.draw_status();
 
       } );
+
+
+      // Mouse controls.
+
+      var $map = $( '#map', self.$elem );
+
+      $map.unbind( 'click.game' );
+      $map.bind( 'click.game', function(ev) {
+
+        var player = self.player;
+
+        if (self.gameover)
+          return false;
+
+        var pos = $map.offset();
+        var x = Math.floor( (ev.pageX - pos.left) / self.TILE_CX );
+        var y = Math.floor( (ev.pageY - pos.top) / self.TILE_CY );
+
+        // Click on the player's current tile to pick up an item.
+        // Click elsewhere to move there.
+
+        if (x == player.x && y == player.y)
+          self.pickup();
+        else
+          self.move( x, y );
+
+        // Update scoreboard and game status.
+
+        self.draw_scoreboard();
+        self.draw_status();
+
+      } );
+
     },
 
     move: function( x, y ) {
@@ -222,8 +258,20 @@ function Game( $elem )
       var self = this;
       var player = self.player;
 
+      // Bounds check new position, must be on the board.
+
       if (x < 0 || x >= self.cx || y < 0 || y >= self.cy)
         return false;
+
+      // Make sure movement is left, right, up, or down.
+
+      var dx = x - player.x;
+      var dy = y - player.y;
+
+      if (Math.abs(dx) + Math.abs(dy) != 1)
+        return false;
+
+      // Check kind of tile we're moving onto.
 
       var newtile = self.board[y][x];
       var dead = false;
@@ -272,7 +320,6 @@ function Game( $elem )
       var self = this;
       var player = self.player;
       var thing = self.at( player.x, player.y );
-      console.log( thing );
 
       if (!thing)
         return false;
@@ -364,6 +411,15 @@ function Game( $elem )
         } );
     },
 
+    draw_status: function() {
+      var self = this;
+
+      // Check for gameover, and show something.
+
+      if (self.gameover)
+        self.draw_message( self.won ? 'You won!' : 'You dead. :(' );
+    },
+
     draw_scoreboard: function() {
       var self = this;
       var $scoreboard = $( '#scoreboard', self.$elem )
@@ -372,6 +428,7 @@ function Game( $elem )
         .html( 'Moves: ' + self.moves )
         .css({ left: '50%', 'margin-left': (-(self.cx * self.TILE_CX/2 + 20 + $scoreboard.width()))+'px' })
         .show();
+
     },
 
     nothing: 0
