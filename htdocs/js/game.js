@@ -166,8 +166,8 @@ function Game( $elem )
 
       // Keyboard controls.
 
-      $(window).unbind( 'keydown.game' );
-      $(window).bind( 'keydown.game', function(ev) {
+      $(document).unbind( 'keydown.game' );
+      $(document).bind( 'keydown.game', function(ev) {
 
         if (self.gameover)
           return false;
@@ -183,7 +183,7 @@ function Game( $elem )
         var player = self.player;
         var newx = player.x;
         var newy = player.y;
-        var key = ev.which;
+        var key = ev.keyCode;
 
         switch (key)
         {
@@ -407,7 +407,7 @@ function Game( $elem )
         .css( {
           top: (pos.top + $map.height()/2 - $message.height()/2)+'px',
           left: (pos.left)+'px',
-          width: ($map.width())+'px',
+          width: ($map.width())+'px'
         } );
     },
 
