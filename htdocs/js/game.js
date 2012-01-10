@@ -33,35 +33,42 @@ function Game( $elem )
             if (line == "")
               return;
 
-            var row = $.map( line.split(/ +/), function(cell,x)
+            var row = $.map( line.split(''), function(cell,x)
             {
               if (cell == "")
                 return;
 
-              var contents = cell.split(/,/);
+              var kind = cell;
 
-              // Create any sprites sitting on this tile.
+              // Add a sprite if it's sitting on the tile.
 
-              for (var i=1; i<contents.length; i++)
+              switch (kind)
               {
-                var kind = contents[i];
-                var $sprite = $('<div class="sprite"></div>');
-                $sprite.addClass('kind-'+kind);
+                case 'B': // boy
+                case 'G': // girl
+                case 'F': // flag
+                case 'R': // rose
 
-                var sprite = {
-                  $elem: $sprite,
-                  kind: kind,
-                  x: x,
-                  y: y
-                };
+                  var $sprite = $('<div class="sprite"></div>');
+                  $sprite.addClass('kind-'+kind);
 
-                self.sprites.push(sprite);
+                  var sprite = {
+                    $elem: $sprite,
+                    kind: kind,
+                    x: x,
+                    y: y
+                  };
 
-                if (kind == 'B')
-                  self.player = sprite;
+                  self.sprites.push(sprite);
+
+                  if (kind == 'B')
+                    self.player = sprite;
+
+                  kind = 'C'; // put a clear tile underneath
               }
 
-              return { kind: contents[0] };
+              return { kind: kind }; // the tile
+
             } );
 
             self.cx = row.length > self.cx ? row.length : self.cx;
