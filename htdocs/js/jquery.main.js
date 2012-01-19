@@ -7,7 +7,7 @@ $(document).ready( function() {
 
   game.load( './data/levels.txt', function() {
 
-    var fragment = window.location.hash;
+    var fragment = location.hash;
     var level = 1;
 
     if (fragment.charAt(0) == '#' && fragment.length > 1)
