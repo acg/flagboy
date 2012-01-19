@@ -195,7 +195,7 @@ function Game( $elem )
       $(document).bind( 'keydown.game', function(ev) {
 
         if (self.gameover)
-          return self.continue();
+          return self.gameover_continue();
 
         var KEY_LEFT = 37;
         var KEY_UP = 38;
@@ -260,7 +260,7 @@ function Game( $elem )
         var player = self.player;
 
         if (self.gameover)
-          return self.continue();
+          return self.gameover_continue();
 
         var pos = $map.offset();
         var x = Math.floor( (ev.pageX - pos.left) / self.TILE_CX );
@@ -296,7 +296,7 @@ function Game( $elem )
 
     },
 
-    continue: function() {
+    gameover_continue: function() {
 
       var self = this;
 
