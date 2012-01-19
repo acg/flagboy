@@ -148,7 +148,7 @@ function Game( $elem )
             "Click on a nearby tile to move there.",
             "Click on your player to pick up an item.",
             "Click on a backpack item to drop it.",
-            "Keyboard: arrows move, spacebar picks up an item, 'D' drops the rose.",
+            "Keyboard: arrows move, spacebar picks up an item, 'f' drops a flag, 'r' drops the rose.",
             "Your backpack can hold up to " + self.BACKPACK_SIZE + " items.",
             "",
             "<i>Graphics: TC</i>",
@@ -190,7 +190,8 @@ function Game( $elem )
         var KEY_DOWN = 40;
         var KEY_SPACE = 32;
         var KEY_P = 80;
-        var KEY_D = 68;
+        var KEY_F = 70;
+        var KEY_R = 82;
 
         var player = self.player;
         var newx = player.x;
@@ -215,11 +216,14 @@ function Game( $elem )
           case KEY_SPACE:
             self.pickup();
             break;
-          case KEY_D:
+          case KEY_R:
             self.drop('R');
             break;
+          case KEY_F:
+            self.drop('F');
+            break;
           default:
-            return false; // let event bubble
+            return; // let event bubble
         }
 
         if (player.x != newx || player.y != newy)
