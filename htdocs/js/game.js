@@ -9,7 +9,7 @@ function Game( $elem )
 
     $elem: $elem,
 
-    load: function( url ) {
+    load: function( url, fn ) {
       var self = this;
 
       $.ajax( {
@@ -147,7 +147,8 @@ function Game( $elem )
             "Use an orange flag to cross the road, or die.",
             "Click on a nearby tile to move there.",
             "Click on your player to pick up an item.",
-            "Keyboard: arrows move, spacebar picks up an item.",
+            "Click on a backpack item to drop it.",
+            "Keyboard: arrows move, spacebar picks up an item, 'D' drops the rose.",
             "Your backpack can hold up to " + self.BACKPACK_SIZE + " items.",
             "",
             "<i>Graphics: TC</i>",
@@ -162,6 +163,10 @@ function Game( $elem )
           // Show scoreboard.
 
           self.draw_scoreboard();
+
+          // Invoke user-supplied success callback.
+
+          fn( self );
         }
       } );
     },
@@ -211,6 +216,7 @@ function Game( $elem )
             self.pickup();
             break;
           case KEY_D:
+            self.drop('R');
             break;
           default:
             return false; // let event bubble
@@ -256,6 +262,19 @@ function Game( $elem )
         self.draw_scoreboard();
         self.draw_status();
 
+      } );
+
+      // If user clicks on a backpack item, drop it.
+
+      $.each( self.sprites, function(i,sprite) {
+        sprite.$elem.unbind( 'click.game' );
+        sprite.$elem.bind( 'click.game', function(ev) {
+          var s = this;
+          var index = self.rummage( null, sprite );
+          if (index < 0) return;
+          self.drop( null, index );
+          return false;
+        } );
       } );
 
     },
@@ -322,6 +341,8 @@ function Game( $elem )
       return true;
     },
 
+    // Put an item on the player's current tile into the backpack.
+
     pickup: function() {
     
       var self = this;
@@ -343,26 +364,49 @@ function Game( $elem )
       return thing;
     },
 
-    drop: function() {
-      // TODO someday... ;)
-      return false;
+    // Put an item in the backpack onto the board.
+
+    drop: function( kind, index ) {
+
+      var self = this;
+      var player = self.player;
+
+      // Find the item in the player's backpack.
+
+      if (index == null)
+        index = self.rummage( kind );
+
+      if (index < 0)
+        return false;
+
+      var thing = self.backpack[index];
+
+      // Make sure tile under the player is empty.
+
+      if (self.at( player.x, player.y ))
+        return false;
+
+      // Move item onto the board.
+
+      thing.x = player.x;
+      thing.y = player.y;
+      self.draw_sprite(thing);
+      self.backpack.splice(index,1);
+      self.draw_backpack();
+
+      return true;
     },
+
+    // Use an item in the backpack.
 
     use: function( kind ) {
       var self = this;
-      var found = -1;
-      var thing = null;
-
-      for (i=0; i<self.backpack.length; i++) {
-        thing = self.backpack[i];
-        if (thing.kind == kind) {
-          found = i;
-          break;
-        }
-      }
+      var found = self.rummage( kind );
 
       if (found < 0)
         return false;
+
+      var thing = self.backpack[found];
 
       thing.x = -10000;
       thing.y = -10000;
@@ -372,6 +416,25 @@ function Game( $elem )
 
       return true;
     },
+
+    // Look in backpack for an item or a particular kind of item.
+
+    rummage: function( kind, what ) {
+      var self = this;
+      var found = -1;
+
+      for (i=0; i<self.backpack.length; i++) {
+        var thing = self.backpack[i];
+        if ((what && what == thing) || (kind && kind == thing.kind)) {
+          found = i;
+          break;
+        }
+      }
+
+      return found;
+    },
+
+    // See what else is on player's current tile.
 
     at: function( x, y ) {
       var self = this;
