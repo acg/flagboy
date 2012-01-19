@@ -16,11 +16,19 @@ body {
 
 #message {
   position: absolute;
+  text-align: center;
+  color: #000;
+  z-index: 100;
+}
+
+#message em {
   font-size: 64px;
   font-weight: bold;
-  text-align: center;
-  color: #e2db79;
-  z-index: 100;
+}
+
+#message i {
+  font-size: 24px;
+  font-weight: bold;
 }
 
 #instructions {
@@ -63,6 +71,12 @@ body {
   width: 64px;
   height: 64px;
   background: transparent none 0 0 no-repeat;
+}
+
+#map.gameover .tile {
+  opacity: 0.5;
+  filter: alpha(opacity=50); // msie
+  background-color: #000;
 }
 
 #map .tile.kind-C { background-image: url(../images/tile-C.png); }

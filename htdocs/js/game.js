@@ -9,172 +9,185 @@ function Game( $elem )
 
     $elem: $elem,
 
+    // Load all the level data.
+
     load: function( url, fn ) {
+
       var self = this;
 
       $.ajax( {
         url: url,
         type: 'get',
         success: function( data ) {
-
-          self.cx = 0;
-          self.cy = 0;
-          self.backpack = [];
-          self.sprites = [];
-          self.player = null;
-          self.gameover = false;
-          self.won = false;
-          self.moves = 0;
-
-          // Read the board
-
-          self.board = $.map( data.split( /[\r\n]/ ), function(line,y)
-          {
-            if (line == "")
-              return;
-
-            var row = $.map( line.split(''), function(cell,x)
-            {
-              if (cell == "")
-                return;
-
-              var kind = cell;
-
-              // Add a sprite if it's sitting on the tile.
-
-              switch (kind)
-              {
-                case 'B': // boy
-                case 'G': // girl
-                case 'F': // flag
-                case 'R': // rose
-
-                  var $sprite = $('<div class="sprite"></div>');
-                  $sprite.addClass('kind-'+kind);
-
-                  var sprite = {
-                    $elem: $sprite,
-                    kind: kind,
-                    x: x,
-                    y: y
-                  };
-
-                  self.sprites.push(sprite);
-
-                  if (kind == 'B')
-                    self.player = sprite;
-
-                  kind = 'C'; // put a clear tile underneath
-              }
-
-              return { kind: kind }; // the tile
-
-            } );
-
-            self.cx = row.length > self.cx ? row.length : self.cx;
-            self.cy++;
-            return [ row ];
-
-          } );
-
-          // Build the map
-          // TODO build outside of dom, then swap in
-
-          var $map = $( '#map', self.$elem );
-          $map.html('');
-          $map.css({ left: '50%', 'margin-left': (-self.cx * self.TILE_CX/2)+'px' });
-
-          for (var y=0; y<self.cy; y++)
-          {
-            var $row = $('<ul></ul>');
-
-            for (var x=0; x<self.cx; x++)
-            {
-              var tile = self.board[y][x];
-              var $tile = $('<li class="tile"></li>');
-              $tile.addClass('x-'+x);
-              $tile.addClass('y-'+y);
-              $tile.addClass('kind-'+tile.kind);
-              tile.$elem = $tile;
-              $row.append( $tile );
-            }
-
-            $map.append( $row );
-          }
-
-          // Create a special death sprite.
-
-          var $death = $('<div class="sprite"></div>');
-          $death.addClass('kind-K');
-
-          self.death = {
-            $elem: $death,
-            kind: 'K',
-            x: -10000,
-            y: -10000
-          };
-
-          self.sprites.push(self.death);
-
-          // Create a special backpack sprite.
-
-          var $pack = $('<div class="sprite"></div>');
-          $pack.addClass('kind-P');
-
-          self.pack = {
-            $elem: $pack,
-            kind: 'P',
-            x: 0,
-            y: self.cy
-          };
-
-          self.sprites.push(self.pack);
-
-          // Place the sprites on the map.
-
-          $.each( self.sprites, function(i,sprite) {
-
-            var $elem = sprite.$elem;
-            self.draw_sprite( sprite );
-            $map.append( $elem );
-            
-          } );
-
-          // Set up instructions.
-
-          var instructions = [
-            "Bring the girl a flower!",
-            "Use an orange flag to cross the road, or die.",
-            "Click on a nearby tile to move there.",
-            "Click on your player to pick up an item.",
-            "Click on a backpack item to drop it.",
-            "Keyboard: arrows move, spacebar picks up an item, 'f' drops a flag, 'r' drops the rose.",
-            "Your backpack can hold up to " + self.BACKPACK_SIZE + " items.",
-            "",
-            "<i>Graphics: TC</i>",
-            "<i>Programming: Alan</i>"
-          ];
-
-          $('#instructions')
-            .html( instructions.join("<br/>") )
-            .css({ left: '50%', 'margin-left': (self.cx * self.TILE_CX/2 + 20)+'px' })
-            .show();
-
-          // Show scoreboard.
-
-          self.draw_scoreboard();
-
-          // Invoke user-supplied success callback.
-
-          fn( self );
+          self.levels = data.split( /[\r\n]{2}/ );
+          self.attempts = 0;
+          return fn( self );
         }
       } );
+
+    },
+
+    // Load a particular level.
+
+    load_level: function( i ) {
+      
+      var self = this;
+
+      self.level = i;
+      self.cx = 0;
+      self.cy = 0;
+      self.backpack = [];
+      self.sprites = [];
+      self.player = null;
+      self.gameover = false;
+      self.won = false;
+      self.moves = 0;
+
+      // Read the board
+
+      self.board = $.map( self.levels[i].split( /[\r\n]/ ), function(line,y)
+      {
+        if (line == "")
+          return;
+
+        var row = $.map( line.split(''), function(cell,x)
+        {
+          if (cell == "")
+            return;
+
+          var kind = cell;
+
+          // Add a sprite if it's sitting on the tile.
+
+          switch (kind)
+          {
+            case 'B': // boy
+            case 'G': // girl
+            case 'F': // flag
+            case 'R': // rose
+
+              var $sprite = $('<div class="sprite"></div>');
+              $sprite.addClass('kind-'+kind);
+
+              var sprite = {
+                $elem: $sprite,
+                kind: kind,
+                x: x,
+                y: y
+              };
+
+              self.sprites.push(sprite);
+
+              if (kind == 'B')
+                self.player = sprite;
+
+              kind = 'C'; // put a clear tile underneath
+          }
+
+          return { kind: kind }; // the tile
+
+        } );
+
+        self.cx = row.length > self.cx ? row.length : self.cx;
+        self.cy++;
+        return [ row ];
+
+      } );
+
+      // Build the map
+      // TODO build outside of dom, then swap in
+
+      var $map = $( '#map', self.$elem );
+      $map.html('');
+      $map.css({ left: '50%', 'margin-left': (-self.cx * self.TILE_CX/2)+'px' });
+
+      for (var y=0; y<self.cy; y++)
+      {
+        var $row = $('<ul></ul>');
+
+        for (var x=0; x<self.cx; x++)
+        {
+          var tile = self.board[y][x];
+          var $tile = $('<li class="tile"></li>');
+          $tile.addClass('x-'+x);
+          $tile.addClass('y-'+y);
+          $tile.addClass('kind-'+tile.kind);
+          tile.$elem = $tile;
+          $row.append( $tile );
+        }
+
+        $map.append( $row );
+      }
+
+      // Create a special death sprite.
+
+      var $death = $('<div class="sprite"></div>');
+      $death.addClass('kind-K');
+
+      self.death = {
+        $elem: $death,
+        kind: 'K',
+        x: -10000,
+        y: -10000
+      };
+
+      self.sprites.push(self.death);
+
+      // Create a special backpack sprite.
+
+      var $pack = $('<div class="sprite"></div>');
+      $pack.addClass('kind-P');
+
+      self.pack = {
+        $elem: $pack,
+        kind: 'P',
+        x: 0,
+        y: self.cy
+      };
+
+      self.sprites.push(self.pack);
+
+      // Place the sprites on the map.
+
+      $.each( self.sprites, function(i,sprite) {
+
+        var $elem = sprite.$elem;
+        self.draw_sprite( sprite );
+        $map.append( $elem );
+        
+      } );
+
+      // Set up instructions.
+
+      var instructions = [
+        "Bring the girl a flower!",
+        "Use an orange flag to cross the road, or die.",
+        "Click on a nearby tile to move there.",
+        "Click on your player to pick up an item.",
+        "Click on a backpack item to drop it.",
+        "Keyboard: arrows move, spacebar picks up an item, 'f' drops a flag, 'r' drops the rose.",
+        "Your backpack can hold up to " + self.BACKPACK_SIZE + " items.",
+        "",
+        "<i>Graphics: TC</i>",
+        "<i>Programming: Alan</i>"
+      ];
+
+      $('#instructions')
+        .html( instructions.join("<br/>") )
+        .css({ left: '50%', 'margin-left': (self.cx * self.TILE_CX/2 + 20)+'px' })
+        .show();
+
+      // Show scoreboard and status.
+
+      self.draw_scoreboard();
+      self.draw_status();
+
+      return true;
     },
 
     play: function() {
 
       var self = this;
-
 
       // Keyboard controls.
 
@@ -182,7 +195,7 @@ function Game( $elem )
       $(document).bind( 'keydown.game', function(ev) {
 
         if (self.gameover)
-          return false;
+          return self.continue();
 
         var KEY_LEFT = 37;
         var KEY_UP = 38;
@@ -247,7 +260,7 @@ function Game( $elem )
         var player = self.player;
 
         if (self.gameover)
-          return false;
+          return self.continue();
 
         var pos = $map.offset();
         var x = Math.floor( (ev.pageX - pos.left) / self.TILE_CX );
@@ -273,13 +286,40 @@ function Game( $elem )
       $.each( self.sprites, function(i,sprite) {
         sprite.$elem.unbind( 'click.game' );
         sprite.$elem.bind( 'click.game', function(ev) {
-          var s = this;
+          if (self.gameover) return;
           var index = self.rummage( null, sprite );
           if (index < 0) return;
           self.drop( null, index );
           return false;
         } );
       } );
+
+    },
+
+    continue: function() {
+
+      var self = this;
+
+      if (!self.gameover)
+        return;
+
+      // If they won and there's another level, advance.
+      // Otherwise stay on current level.
+
+      if (self.won) {
+        if (self.level+1 < self.levels.length) {
+          self.level++;
+          self.attempts = 0;
+        }
+      }
+      else {
+        self.attempts++;
+      }
+
+      self.gameover = false;
+      self.load_level( self.level );
+      self.play();
+      return true;
 
     },
 
@@ -490,8 +530,24 @@ function Game( $elem )
 
       // Check for gameover, and show something.
 
+      var message = '';
+
       if (self.gameover)
-        self.draw_message( self.won ? 'You won!' : 'You dead. :(' );
+      {
+        message = self.won ? 'You won!' : 'You dead. :(';
+        message = '<em>' + message + '</em>';
+        message += '<br/> ';
+        message += '<i>Click or press any key to continue...</i>';
+      }
+
+      self.draw_message( message );
+
+      var $map = $( '#map', self.$elem );
+
+      if (self.gameover)
+        $map.addClass( 'gameover' );
+      else
+        $map.removeClass( 'gameover' );
     },
 
     draw_scoreboard: function() {
@@ -499,7 +555,9 @@ function Game( $elem )
       var $scoreboard = $( '#scoreboard', self.$elem )
 
       $scoreboard
-        .html( 'Moves: ' + self.moves )
+        .html( 'Level: ' + (1+self.level) + '<br/>' +
+               'Moves: ' + self.moves + '<br/>' +
+               'Attempts: ' + self.attempts )
         .css({ left: '50%', 'margin-left': (-(self.cx * self.TILE_CX/2 + 20 + $scoreboard.width()))+'px' })
         .show();
 
